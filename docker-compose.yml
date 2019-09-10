@@ -1,0 +1,49 @@
+version: "3.7"
+
+secrets:
+    mysql_root_password:
+        file: ./mysql/root_password.secret
+    mysql_password:
+        file: ./mysql/password.secret
+
+volumes:
+    db:
+    website:
+
+networks:
+    internal:
+        internal: true
+    external:
+
+services:
+    mysql:
+        image: mysql:5.7
+        environment:
+            MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+            MYSQL_DATABASE: wordpress
+            MYSQL_USER: wp-user
+            MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+        secrets:
+            - mysql_root_password
+            - mysql_password
+        volumes:
+            - db:/var/lib/mysql
+        networks:
+            - internal
+
+    wordpress:
+        image: wordpress:php7.1-apache
+        ports:
+         - "8080:80"
+        environment:
+            WORDPRESS_DB_HOST: mysql:3306
+            WORDPRESS_DB_NAME: wordpress
+            WORDPRESS_DB_USER: wp-user
+            WORDPRESS_DB_PASSWORD_FILE: /run/secrets/mysql_password
+        secrets:
+            - mysql_password
+        volumes:
+            - website:/var/www/html
+        networks:
+            - internal
+            - external
