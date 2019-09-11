@@ -54,7 +54,7 @@ services:
             - external
 
     nginx:
-        image: linuxserver/letsencrypt
+        image: linuxserver/letsencrypt:0.38.0-ls59
         ports:
             - "80:80"
             - "443:443"
