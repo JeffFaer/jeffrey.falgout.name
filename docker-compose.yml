@@ -1,12 +1,19 @@
 version: "3.7"
 
+configs:
+    nginx:
+        file: ./nginx/default.conf
+
 secrets:
     mysql_root_password:
         file: ./mysql/root_password.secret
     mysql_password:
         file: ./mysql/password.secret
+    digitalocean_creds:
+        file: ./nginx/digitalocean.ini.secret
 
 volumes:
+    nginx_config:
     db:
     website:
 
@@ -33,8 +40,6 @@ services:
 
     wordpress:
         image: wordpress:php7.1-apache
-        ports:
-         - "8080:80"
         environment:
             WORDPRESS_DB_HOST: mysql:3306
             WORDPRESS_DB_NAME: wordpress
@@ -46,4 +51,27 @@ services:
             - website:/var/www/html
         networks:
             - internal
+            - external
+
+    nginx:
+        image: linuxserver/letsencrypt
+        ports:
+            - "80:80"
+            - "443:443"
+        environment:
+            TZ: US/Denver
+            URL: jeffrey.falgout.name
+            SUBDOMAINS: wildcard
+            VALIDATION: dns
+            DNSPLUGIN: digitalocean
+            EMAIL: jeffrey@falgout.email
+        configs:
+            - source: nginx
+              target: /config/nginx/site-confs/default
+        secrets:
+            - source: digitalocean_creds
+              target: /config/dns-conf/digitalocean.ini
+        volumes:
+            - nginx_config:/config
+        networks:
             - external
