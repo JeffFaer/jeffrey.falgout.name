@@ -5,22 +5,22 @@ configs:
         file: ./nginx/default.conf
 
 secrets:
+    digitalocean_creds:
+        file: ./nginx/digitalocean.ini.secret
     mysql_root_password:
         file: ./mysql/root_password.secret
     mysql_password:
         file: ./mysql/password.secret
-    digitalocean_creds:
-        file: ./nginx/digitalocean.ini.secret
 
 volumes:
-    nginx_config:
     db:
+    nginx_config:
     website:
 
 networks:
+    external:
     internal:
         internal: true
-    external:
 
 services:
     mysql:
@@ -37,21 +37,6 @@ services:
             - db:/var/lib/mysql
         networks:
             - internal
-
-    wordpress:
-        image: wordpress:php7.1-apache
-        environment:
-            WORDPRESS_DB_HOST: mysql:3306
-            WORDPRESS_DB_NAME: wordpress
-            WORDPRESS_DB_USER: wp-user
-            WORDPRESS_DB_PASSWORD_FILE: /run/secrets/mysql_password
-        secrets:
-            - mysql_password
-        volumes:
-            - website:/var/www/html
-        networks:
-            - internal
-            - external
 
     nginx:
         image: linuxserver/letsencrypt:0.38.0-ls59
@@ -74,4 +59,19 @@ services:
         volumes:
             - nginx_config:/config
         networks:
+            - external
+
+    wordpress:
+        image: wordpress:php7.1-apache
+        environment:
+            WORDPRESS_DB_HOST: mysql:3306
+            WORDPRESS_DB_NAME: wordpress
+            WORDPRESS_DB_USER: wp-user
+            WORDPRESS_DB_PASSWORD_FILE: /run/secrets/mysql_password
+        secrets:
+            - mysql_password
+        volumes:
+            - website:/var/www/html
+        networks:
+            - internal
             - external
